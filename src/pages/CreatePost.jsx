@@ -27,9 +27,16 @@ export default function CreatePost() {
     try {
       let imageURL = "";
       if (file) {
-        const storageRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
-        await uploadBytes(storageRef, file);
-        imageURL = await getDownloadURL(storageRef);
+        try {
+          const storageRef = ref(storage, `posts/${user.uid}/${Date.now()}-${file.name}`);
+          await uploadBytes(storageRef, file);
+          imageURL = await getDownloadURL(storageRef);
+        } catch (storageErr) {
+          // Firebase Storage not available (free plan) — post without image
+          console.warn("Image upload skipped (Storage not enabled):", storageErr.message);
+          alert("⚠️ Image upload is not available yet. Your post will be shared as text only.");
+          imageURL = "";
+        }
       }
       await addDoc(collection(db, "posts"), {
         authorId: user.uid,
